@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thư viện Video Bài Giảng</title>
+<style>
+  body {
+    background-color: transparent;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+
+  .app-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    padding: 30px;
+    min-height: 400px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #e52d27; /* Màu đỏ YouTube */
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-size: 32px;
+  }
+
+  /* --- MENU --- */
+  .unit-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+
+  .unit-btn {
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    color: white;
+    border: none;
+    padding: 20px 10px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(255, 75, 43, 0.3);
+  }
+
+  .unit-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(255, 75, 43, 0.5);
+  }
+
+  /* --- MÀN HÌNH PHÁT VIDEO --- */
+  .video-view {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+  }
+
+  .back-btn {
+    background-color: #f1f3f4;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+    margin-right: 20px;
+  }
+
+  .back-btn:hover {
+    background-color: #e8eaed;
+  }
+
+  .unit-title {
+    font-size: 24px;
+    color: #e52d27;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  /* Container giữ tỷ lệ 16:9 chuẩn cho video */
+  .video-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+
+  .video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: #888;
+    font-size: 18px;
+    padding: 40px 0;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <div id="menu-screen">
+    <h1>🎬 Video Bài Giảng 12 Units</h1>
+    <div class="unit-menu" id="unit-menu"></div>
+  </div>
+
+  <div id="video-screen" class="video-view">
+    <div class="toolbar">
+      <button class="back-btn" onclick="goBack()">⬅ Quay lại</button>
+      <h2 class="unit-title" id="current-unit-title">Unit ...</h2>
+    </div>
+    
+    <div id="video-player-area">
+      </div>
+  </div>
+
+</div>
+
+<script>
+  // ==========================================
+  // CẤU HÌNH LINK YOUTUBE CHO 12 UNIT
+  // ==========================================
+  // Thay thế các link bên dưới bằng link nhúng video YouTube của bạn.
+  // Nhớ dùng định dạng: https://www.youtube.com/embed/ID_VIDEO
+  
+  const videoData = {
+    1: "", // Chưa có video
+    2: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Ví dụ link video Unit 2
+    3: "",
+    4: "",
+    5: "",
+    6: "",
+    7: "",
+    8: "",
+    9: "",
+    10: "",
+    11: "",
+    12: ""
+  };
+
+  const menuScreen = document.getElementById('menu-screen');
+  const videoScreen = document.getElementById('video-screen');
+  const unitMenuContainer = document.getElementById('unit-menu');
+  const videoPlayerArea = document.getElementById('video-player-area');
+  const currentUnitTitle = document.getElementById('current-unit-title');
+
+  function initMenu() {
+    for (let i = 1; i <= 12; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'unit-btn';
+      btn.innerText = `Unit ${i}`;
+      btn.onclick = () => openUnit(i);
+      
+      // Đổi màu nút thành xám nếu Unit đó chưa có link video
+      if (!videoData[i] || videoData[i] === "") {
+        btn.style.background = 'linear-gradient(135deg, #b0bec5, #90a4ae)';
+        btn.style.boxShadow = 'none';
+      }
+      unitMenuContainer.appendChild(btn);
+    }
+  }
+
+  function openUnit(unitNumber) {
+    currentUnitTitle.innerText = `Video Bài Giảng - Unit ${unitNumber}`;
+    const videoLink = videoData[unitNumber];
+
+    if (!videoLink || videoLink === "") {
+      videoPlayerArea.innerHTML = `<div class="empty-state">Video Unit ${unitNumber} đang được cập nhật. Bạn quay lại sau nhé! 🚧</div>`;
+    } else {
+      // Nhúng iframe YouTube
+      videoPlayerArea.innerHTML = `
+        <div class="video-container">
+          <iframe 
+            src="${videoLink}?rel=0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+          </iframe>
+        </div>
+      `;
+    }
+
+    menuScreen.style.display = 'none';
+    videoScreen.style.display = 'block';
+  }
+
+  function goBack() {
+    // Xóa iframe để video ngừng phát khi bấm quay lại
+    videoPlayerArea.innerHTML = ''; 
+    videoScreen.style.display = 'none';
+    menuScreen.style.display = 'block';
+  }
+
+  initMenu();
+</script>
+
+</body>
+</html>
