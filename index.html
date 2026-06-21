@@ -68,6 +68,10 @@
     margin-bottom: 20px;
     border-bottom: 2px solid #f0f0f0;
     padding-bottom: 15px;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
   }
 
   .back-btn {
@@ -94,15 +98,47 @@
     margin: 0;
   }
 
-  /* Container giữ tỷ lệ 16:9 chuẩn cho video */
+  /* --- KHUNG CHỨA NHIỀU VIDEO --- */
+  .video-list {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .video-item {
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  }
+
+  .video-part-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #555;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .video-part-title span {
+    background: #ff4b2b;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
   .video-container {
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
     background-color: #000;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   }
 
   .video-container iframe {
@@ -142,32 +178,38 @@
       <h2 class="unit-title" id="current-unit-title">Unit ...</h2>
     </div>
     
-    <div id="video-player-area">
-      </div>
+    <div id="video-player-area" class="video-list"></div>
   </div>
 
 </div>
 
 <script>
   // ==========================================
-  // CẤU HÌNH LINK YOUTUBE CHO 12 UNIT
+  // CẤU HÌNH LINK YOUTUBE CHO 12 UNIT (ĐÃ SỬA LỖI)
   // ==========================================
-  // Thay thế các link bên dưới bằng link nhúng video YouTube của bạn.
-  // Nhớ dùng định dạng: https://www.youtube.com/embed/ID_VIDEO
   
   const videoData = {
-    1: "", // Chưa có video
-    2: "https://www.youtube.com/embed/rrexZpdHrLw,https://www.youtube.com/embed/5ejapv2ZkZQ,https://www.youtube.com/embed/dUAdWUr0fqE,https://www.youtube.com/embed/pZtMhsEQdYk;https://www.youtube.com/embed/1nCSgajFivg", // Ví dụ link video Unit 2
-    3: "",
-    4: "",
-    5: "",
-    6: "",
-    7: "",
-    8: "",
-    9: "",
-    10: "",
-    11: "",
-    12: ""
+    1: [], 
+    
+    // Unit 2 đã được sửa thành mảng chứa 5 video riêng biệt
+    2: [
+      "https://www.youtube.com/embed/rrexZpdHrLw",
+      "https://www.youtube.com/embed/5ejapv2ZkZQ",
+      "https://www.youtube.com/embed/dUAdWUr0fqE",
+      "https://www.youtube.com/embed/pZtMhsEQdYk",
+      "https://www.youtube.com/embed/1nCSgajFivg"
+    ], 
+    
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: [],
+    9: [],
+    10: [],
+    11: [],
+    12: []
   };
 
   const menuScreen = document.getElementById('menu-screen');
@@ -184,7 +226,7 @@
       btn.onclick = () => openUnit(i);
       
       // Đổi màu nút thành xám nếu Unit đó chưa có link video
-      if (!videoData[i] || videoData[i] === "") {
+      if (!videoData[i] || videoData[i].length === 0) {
         btn.style.background = 'linear-gradient(135deg, #b0bec5, #90a4ae)';
         btn.style.boxShadow = 'none';
       }
@@ -194,25 +236,35 @@
 
   function openUnit(unitNumber) {
     currentUnitTitle.innerText = `Video Bài Giảng - Unit ${unitNumber}`;
-    const videoLink = videoData[unitNumber];
+    const videos = videoData[unitNumber] || [];
 
-    if (!videoLink || videoLink === "") {
+    if (videos.length === 0) {
       videoPlayerArea.innerHTML = `<div class="empty-state">Video Unit ${unitNumber} đang được cập nhật. Bạn quay lại sau nhé! 🚧</div>`;
     } else {
-      // Nhúng iframe YouTube
-      videoPlayerArea.innerHTML = `
-        <div class="video-container">
-          <iframe 
-            src="${videoLink}?rel=0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-          </iframe>
-        </div>
-      `;
+      let htmlContent = "";
+      
+      videos.forEach((link, index) => {
+        htmlContent += `
+          <div class="video-item">
+            <h3 class="video-part-title"><span>Phần ${index + 1}</span></h3>
+            <div class="video-container">
+              <iframe 
+                src="${link}?rel=0" 
+                loading="lazy" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+              </iframe>
+            </div>
+          </div>
+        `;
+      });
+      
+      videoPlayerArea.innerHTML = htmlContent;
     }
 
     menuScreen.style.display = 'none';
     videoScreen.style.display = 'block';
+    window.scrollTo({top: 0, behavior: 'smooth'});
   }
 
   function goBack() {
