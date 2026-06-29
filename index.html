@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> Instructional Video </title>
+<title> Instructional & Reference Videos </title>
 <style>
   body {
     background-color: transparent;
@@ -27,11 +27,50 @@
     text-align: center;
     color: #e52d27; /* Màu đỏ YouTube */
     margin-top: 0;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     font-size: 32px;
   }
 
-  /* --- MENU --- */
+  /* --- TABS --- */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+
+  .tab-btn {
+    background-color: #f1f3f4;
+    color: #555;
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .tab-btn:hover {
+    background-color: #e0e0e0;
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, #e52d27, #b31217);
+    color: white;
+    box-shadow: 0 4px 10px rgba(229, 45, 39, 0.3);
+  }
+
+  .tab-content {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* --- MENU UNIT --- */
   .unit-menu {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -56,7 +95,7 @@
     box-shadow: 0 8px 15px rgba(255, 75, 43, 0.5);
   }
 
-  /* --- MÀN HÌNH PHÁT VIDEO --- */
+  /* --- MÀN HÌNH PHÁT VIDEO (CHO UNIT) --- */
   .video-view {
     display: none;
     animation: fadeIn 0.4s ease-out;
@@ -131,6 +170,10 @@
     font-size: 14px;
     font-weight: bold;
   }
+  
+  .ref-title span {
+    background: #1976D2; /* Màu xanh cho reference video */
+  }
 
   .video-container {
     position: relative;
@@ -167,31 +210,43 @@
 
 <div class="app-container">
   
-  <div id="menu-screen">
-    <h1>🎬 Instructional Video</h1>
-    <div class="unit-menu" id="unit-menu"></div>
+  <div id="main-header">
+    <h1>🎬 Video Library</h1>
+    
+    <div class="tabs" id="tabs-container">
+      <button class="tab-btn active" onclick="switchTab('units')">Instructional Videos</button>
+      <button class="tab-btn" onclick="switchTab('references')">Reference Videos</button>
+    </div>
   </div>
 
-  <div id="video-screen" class="video-view">
-    <div class="toolbar">
-      <button class="back-btn" onclick="goBack()">⬅ Quay lại</button>
-      <h2 class="unit-title" id="current-unit-title">Unit ...</h2>
+  <div id="units-tab" class="tab-content active">
+    <div id="menu-screen">
+      <div class="unit-menu" id="unit-menu"></div>
     </div>
-    
-    <div id="video-player-area" class="video-list"></div>
+
+    <div id="video-screen" class="video-view">
+      <div class="toolbar">
+        <button class="back-btn" onclick="goBack()">⬅ Quay lại</button>
+        <h2 class="unit-title" id="current-unit-title">Unit ...</h2>
+      </div>
+      
+      <div id="video-player-area" class="video-list"></div>
+    </div>
+  </div>
+
+  <div id="references-tab" class="tab-content">
+    <div id="ref-video-area" class="video-list">
+      </div>
   </div>
 
 </div>
 
 <script>
   // ==========================================
-  // CẤU HÌNH LINK YOUTUBE CHO 12 UNIT (ĐÃ SỬA LỖI)
+  // CẤU HÌNH LINK YOUTUBE CHO 12 UNIT
   // ==========================================
-  
   const videoData = {
     1: [], 
-    
-    // Unit 2 đã được sửa thành mảng chứa 5 video riêng biệt
     2: [
       "https://www.youtube.com/embed/rrexZpdHrLw",
       "https://www.youtube.com/embed/5ejapv2ZkZQ",
@@ -199,7 +254,6 @@
       "https://www.youtube.com/embed/pZtMhsEQdYk",
       "https://www.youtube.com/embed/1nCSgajFivg"
     ], 
-    
     3: [],
     4: [],
     5: [],
@@ -212,12 +266,33 @@
     12: []
   };
 
+  // ==========================================
+  // CẤU HÌNH LINK REFERENCE VIDEOS
+  // Đã chuyển định dạng youtu.be -> youtube.com/embed/
+  // ==========================================
+  const referenceVideos = [
+    "https://www.youtube.com/embed/JaqgU6dMON0",
+    "https://www.youtube.com/embed/1yDsFh5A104",
+    "https://www.youtube.com/embed/S9ZLLKombb0",
+    "https://www.youtube.com/embed/sfNHy7K4T2o",
+    "https://www.youtube.com/embed/ULxwgAreRyw",
+    "https://www.youtube.com/embed/cFhZLaLDILQ",
+    "https://www.youtube.com/embed/pUPM3DtK9so",
+    "https://www.youtube.com/embed/GZ9CwkSgmz8",
+    "https://www.youtube.com/embed/biX7NNxw_w8",
+    "https://www.youtube.com/embed/5iKL0IjfdqE",
+    "https://www.youtube.com/embed/y0Ctajib_Mw"
+  ];
+
   const menuScreen = document.getElementById('menu-screen');
   const videoScreen = document.getElementById('video-screen');
   const unitMenuContainer = document.getElementById('unit-menu');
   const videoPlayerArea = document.getElementById('video-player-area');
   const currentUnitTitle = document.getElementById('current-unit-title');
+  const refVideoArea = document.getElementById('ref-video-area');
+  const tabsContainer = document.getElementById('tabs-container');
 
+  // Khởi tạo menu các Unit
   function initMenu() {
     for (let i = 1; i <= 12; i++) {
       const btn = document.createElement('button');
@@ -225,7 +300,6 @@
       btn.innerText = `Unit ${i}`;
       btn.onclick = () => openUnit(i);
       
-      // Đổi màu nút thành xám nếu Unit đó chưa có link video
       if (!videoData[i] || videoData[i].length === 0) {
         btn.style.background = 'linear-gradient(135deg, #b0bec5, #90a4ae)';
         btn.style.boxShadow = 'none';
@@ -234,6 +308,52 @@
     }
   }
 
+  // Khởi tạo danh sách Reference Videos
+  function initReferenceVideos() {
+    let htmlContent = "";
+    referenceVideos.forEach((link, index) => {
+      htmlContent += `
+        <div class="video-item">
+          <h3 class="video-part-title ref-title"><span>Video ${index + 1}</span></h3>
+          <div class="video-container">
+            <iframe 
+              src="${link}?rel=0" 
+              loading="lazy" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+      `;
+    });
+    refVideoArea.innerHTML = htmlContent;
+  }
+
+  // Chuyển đổi giữa các Tab
+  function switchTab(tabName) {
+    // Đổi trạng thái active của buttons
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // Ẩn tất cả nội dung
+    document.getElementById('units-tab').classList.remove('active');
+    document.getElementById('references-tab').classList.remove('active');
+
+    // Xóa iframe của các video đang phát để ngừng âm thanh
+    goBack(); // Đảm bảo đóng video unit đang mở (nếu có)
+    refVideoArea.innerHTML = ''; // Tạm xóa reference video
+    
+    // Hiển thị nội dung tương ứng
+    if (tabName === 'units') {
+      document.getElementById('units-tab').classList.add('active');
+    } else if (tabName === 'references') {
+      document.getElementById('references-tab').classList.add('active');
+      initReferenceVideos(); // Load lại iframe cho reference
+    }
+  }
+
+  // Mở màn hình video của một Unit cụ thể
   function openUnit(unitNumber) {
     currentUnitTitle.innerText = `Video Bài Giảng - Unit ${unitNumber}`;
     const videos = videoData[unitNumber] || [];
@@ -242,7 +362,6 @@
       videoPlayerArea.innerHTML = `<div class="empty-state">Video Unit ${unitNumber} đang được cập nhật. Bạn quay lại sau nhé! 🚧</div>`;
     } else {
       let htmlContent = "";
-      
       videos.forEach((link, index) => {
         htmlContent += `
           <div class="video-item">
@@ -258,23 +377,26 @@
           </div>
         `;
       });
-      
       videoPlayerArea.innerHTML = htmlContent;
     }
 
     menuScreen.style.display = 'none';
+    tabsContainer.style.display = 'none'; // Ẩn thanh tabs khi đang trong bài giảng
     videoScreen.style.display = 'block';
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
 
+  // Nút quay lại từ màn hình video của Unit
   function goBack() {
-    // Xóa iframe để video ngừng phát khi bấm quay lại
-    videoPlayerArea.innerHTML = ''; 
+    videoPlayerArea.innerHTML = ''; // Xóa iframe để video ngừng phát
     videoScreen.style.display = 'none';
     menuScreen.style.display = 'block';
+    tabsContainer.style.display = 'flex'; // Hiện lại thanh tabs
   }
 
+  // Chạy lúc load trang
   initMenu();
+  initReferenceVideos();
 </script>
 
 </body>
