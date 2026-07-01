@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> Instructional & Reference Videos </title>
+<title>Instructional & Reference Videos</title>
 <style>
   body {
     background-color: transparent;
@@ -11,6 +11,7 @@
     margin: 0;
     padding: 20px;
     color: #333;
+    position: relative;
   }
 
   .app-container {
@@ -21,6 +22,35 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     padding: 30px;
     min-height: 400px;
+    position: relative;
+  }
+
+  /* --- NÚT DỊCH GÓC PHẢI --- */
+  .top-right-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 20;
+  }
+
+  .lang-btn {
+    background-color: #f1f3f4;
+    color: #333;
+    border: 1px solid #e0e0e0;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .lang-btn:hover {
+    background-color: #e0e0e0;
+    transform: scale(1.05);
   }
 
   h1 {
@@ -204,18 +234,28 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  @media (max-width: 600px) {
+    .top-right-controls { top: 10px; right: 10px; }
+    h1 { margin-top: 40px; font-size: 26px; }
+    .tabs { flex-direction: column; align-items: center; }
+  }
 </style>
 </head>
 <body>
 
 <div class="app-container">
   
+  <div class="top-right-controls">
+    <button class="lang-btn" onclick="toggleLanguage()">🌐 Translate / Dịch</button>
+  </div>
+  
   <div id="main-header">
-    <h1>🎬 Video Library</h1>
+    <h1 id="main-title">🎬 Video Library</h1>
     
     <div class="tabs" id="tabs-container">
-      <button class="tab-btn active" onclick="switchTab('units')">Instructional Videos</button>
-      <button class="tab-btn" onclick="switchTab('references')">Reference Videos</button>
+      <button class="tab-btn active" id="tab-inst" onclick="switchTab('units')">Instructional Videos</button>
+      <button class="tab-btn" id="tab-ref" onclick="switchTab('references')">Reference Videos</button>
     </div>
   </div>
 
@@ -226,7 +266,7 @@
 
     <div id="video-screen" class="video-view">
       <div class="toolbar">
-        <button class="back-btn" onclick="goBack()">⬅ Quay lại</button>
+        <button class="back-btn" id="back-btn" onclick="goBack()">⬅ Back</button>
         <h2 class="unit-title" id="current-unit-title">Unit ...</h2>
       </div>
       
@@ -243,6 +283,39 @@
 
 <script>
   // ==========================================
+  // 1. TỪ ĐIỂN ĐA NGÔN NGỮ (LANGUAGE DICTIONARY)
+  // ==========================================
+  const i18n = {
+    en: {
+      pageTitle: "Instructional & Reference Videos",
+      mainTitle: "🎬 Video Library",
+      tabInst: "Instructional Videos",
+      tabRef: "Reference Videos",
+      unitBtnPrefix: "Unit ",
+      backBtn: "⬅ Back",
+      unitTitlePrefix: "Instructional Video - Unit ",
+      emptyState: "Video for Unit {unit} is being updated. Come back later! 🚧",
+      partPrefix: "Part ",
+      videoPrefix: "Video "
+    },
+    vi: {
+      pageTitle: "Video Bài Giảng & Tham Khảo",
+      mainTitle: "🎬 Thư Viện Video",
+      tabInst: "Video Bài Giảng",
+      tabRef: "Video Tham Khảo",
+      unitBtnPrefix: "Unit ",
+      backBtn: "⬅ Quay lại",
+      unitTitlePrefix: "Video Bài Giảng - Unit ",
+      emptyState: "Video Unit {unit} đang được cập nhật. Bạn quay lại sau nhé! 🚧",
+      partPrefix: "Phần ",
+      videoPrefix: "Video "
+    }
+  };
+
+  let currentLang = 'en'; // Mặc định tiếng Anh
+  let activeUnit = null;  // Lưu trạng thái Unit đang mở
+
+  // ==========================================
   // CẤU HÌNH LINK YOUTUBE CHO 12 UNIT
   // ==========================================
   const videoData = {
@@ -254,21 +327,11 @@
       "https://www.youtube.com/embed/pZtMhsEQdYk",
       "https://www.youtube.com/embed/1nCSgajFivg"
     ], 
-    3: [],
-    4: [],
-    5: [],
-    6: [],
-    7: [],
-    8: [],
-    9: [],
-    10: [],
-    11: [],
-    12: []
+    3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: []
   };
 
   // ==========================================
   // CẤU HÌNH LINK REFERENCE VIDEOS
-  // Đã chuyển định dạng youtu.be -> youtube.com/embed/
   // ==========================================
   const referenceVideos = [
     "https://www.youtube.com/embed/JaqgU6dMON0",
@@ -294,10 +357,11 @@
 
   // Khởi tạo menu các Unit
   function initMenu() {
+    unitMenuContainer.innerHTML = '';
     for (let i = 1; i <= 12; i++) {
       const btn = document.createElement('button');
       btn.className = 'unit-btn';
-      btn.innerText = `Unit ${i}`;
+      btn.innerText = `${i18n[currentLang].unitBtnPrefix}${i}`;
       btn.onclick = () => openUnit(i);
       
       if (!videoData[i] || videoData[i].length === 0) {
@@ -314,7 +378,7 @@
     referenceVideos.forEach((link, index) => {
       htmlContent += `
         <div class="video-item">
-          <h3 class="video-part-title ref-title"><span>Video ${index + 1}</span></h3>
+          <h3 class="video-part-title ref-title"><span class="dynamic-ref-title">${i18n[currentLang].videoPrefix}${index + 1}</span></h3>
           <div class="video-container">
             <iframe 
               src="${link}?rel=0" 
@@ -329,43 +393,21 @@
     refVideoArea.innerHTML = htmlContent;
   }
 
-  // Chuyển đổi giữa các Tab
-  function switchTab(tabName) {
-    // Đổi trạng thái active của buttons
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-
-    // Ẩn tất cả nội dung
-    document.getElementById('units-tab').classList.remove('active');
-    document.getElementById('references-tab').classList.remove('active');
-
-    // Xóa iframe của các video đang phát để ngừng âm thanh
-    goBack(); // Đảm bảo đóng video unit đang mở (nếu có)
-    refVideoArea.innerHTML = ''; // Tạm xóa reference video
-    
-    // Hiển thị nội dung tương ứng
-    if (tabName === 'units') {
-      document.getElementById('units-tab').classList.add('active');
-    } else if (tabName === 'references') {
-      document.getElementById('references-tab').classList.add('active');
-      initReferenceVideos(); // Load lại iframe cho reference
-    }
-  }
-
   // Mở màn hình video của một Unit cụ thể
   function openUnit(unitNumber) {
-    currentUnitTitle.innerText = `Video Bài Giảng - Unit ${unitNumber}`;
+    activeUnit = unitNumber;
+    currentUnitTitle.innerText = `${i18n[currentLang].unitTitlePrefix}${unitNumber}`;
     const videos = videoData[unitNumber] || [];
 
     if (videos.length === 0) {
-      videoPlayerArea.innerHTML = `<div class="empty-state">Video Unit ${unitNumber} đang được cập nhật. Bạn quay lại sau nhé! 🚧</div>`;
+      let emptyText = i18n[currentLang].emptyState.replace("{unit}", unitNumber);
+      videoPlayerArea.innerHTML = `<div class="empty-state">${emptyText}</div>`;
     } else {
       let htmlContent = "";
       videos.forEach((link, index) => {
         htmlContent += `
           <div class="video-item">
-            <h3 class="video-part-title"><span>Phần ${index + 1}</span></h3>
+            <h3 class="video-part-title"><span class="dynamic-part-title">${i18n[currentLang].partPrefix}${index + 1}</span></h3>
             <div class="video-container">
               <iframe 
                 src="${link}?rel=0" 
@@ -381,17 +423,80 @@
     }
 
     menuScreen.style.display = 'none';
-    tabsContainer.style.display = 'none'; // Ẩn thanh tabs khi đang trong bài giảng
+    tabsContainer.style.display = 'none'; 
     videoScreen.style.display = 'block';
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    
+    // Nếu vừa đổi ngôn ngữ, không tự động cuộn lên đầu để tránh khó chịu khi đang xem
+    if (event && event.type !== 'click') {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+  }
+
+  // Chuyển đổi giữa các Tab
+  function switchTab(tabName) {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    document.getElementById('units-tab').classList.remove('active');
+    document.getElementById('references-tab').classList.remove('active');
+
+    goBack(); // Đóng video đang mở (nếu có)
+    refVideoArea.innerHTML = ''; 
+    
+    if (tabName === 'units') {
+      document.getElementById('units-tab').classList.add('active');
+    } else if (tabName === 'references') {
+      document.getElementById('references-tab').classList.add('active');
+      initReferenceVideos(); 
+    }
   }
 
   // Nút quay lại từ màn hình video của Unit
   function goBack() {
-    videoPlayerArea.innerHTML = ''; // Xóa iframe để video ngừng phát
+    activeUnit = null;
+    videoPlayerArea.innerHTML = ''; 
     videoScreen.style.display = 'none';
     menuScreen.style.display = 'block';
-    tabsContainer.style.display = 'flex'; // Hiện lại thanh tabs
+    tabsContainer.style.display = 'flex'; 
+  }
+
+  // Hàm thay đổi ngôn ngữ
+  function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'vi' : 'en';
+    
+    // Cập nhật text các phần tử tĩnh
+    document.title = i18n[currentLang].pageTitle;
+    document.getElementById('main-title').innerText = i18n[currentLang].mainTitle;
+    document.getElementById('tab-inst').innerText = i18n[currentLang].tabInst;
+    document.getElementById('tab-ref').innerText = i18n[currentLang].tabRef;
+    document.getElementById('back-btn').innerText = i18n[currentLang].backBtn;
+    
+    // Cập nhật Menu Unit
+    initMenu();
+
+    // Nếu đang mở tab Tham khảo thì cập nhật tiêu đề video mà không load lại iframe
+    const refTabActive = document.getElementById('references-tab').classList.contains('active');
+    if (refTabActive) {
+      document.querySelectorAll('.dynamic-ref-title').forEach((el, index) => {
+        el.innerText = `${i18n[currentLang].videoPrefix}${index + 1}`;
+      });
+    }
+
+    // Nếu đang mở bài giảng thì cập nhật tiêu đề mà không load lại iframe (để không ngắt video)
+    if (activeUnit) {
+      currentUnitTitle.innerText = `${i18n[currentLang].unitTitlePrefix}${activeUnit}`;
+      const videos = videoData[activeUnit] || [];
+      
+      if (videos.length === 0) {
+        let emptyText = i18n[currentLang].emptyState.replace("{unit}", activeUnit);
+        videoPlayerArea.innerHTML = `<div class="empty-state">${emptyText}</div>`;
+      } else {
+        document.querySelectorAll('.dynamic-part-title').forEach((el, index) => {
+          el.innerText = `${i18n[currentLang].partPrefix}${index + 1}`;
+        });
+      }
+    }
   }
 
   // Chạy lúc load trang
